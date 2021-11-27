@@ -1,4 +1,4 @@
-// ESP32 WROOM RGB Nixie Clock Test
+// ESP32 WROOM RGB LED Nixie Clock Test
 
 #include <FastLED.h> // http://librarymanager/All#FastLED
 
@@ -21,8 +21,8 @@ void setup() {
 
 void loop()
 {
-  fill_rainbow( leds, NUM_LEDS, gHue, 7);
+  fill_rainbow( leds, NUM_LEDS, gHue, 4); // 256 / 60 = 4 (approx.)
   FastLED.show();
   
-  EVERY_N_MILLISECONDS( 10 ) { gHue++; } // cycle the "base color" through the rainbow
+  EVERY_N_MILLISECONDS( 25 ) { gHue++; } // cycle the "base color" through the rainbow
 }

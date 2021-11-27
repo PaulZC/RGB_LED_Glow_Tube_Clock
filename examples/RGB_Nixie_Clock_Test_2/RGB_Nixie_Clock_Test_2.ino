@@ -10,7 +10,7 @@
 
 #include "time.h"
 
-const char* ntpServer = "pool.ntp.org"; // The Network Time Protocol Server
+const char* ntpServer = "europe.pool.ntp.org"; // The Network Time Protocol Server
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -55,7 +55,7 @@ void setup() {
   // Set the RTC using network time. (Code taken from the SimpleTime example.)
 
   // Request the time from the NTP server and use it to set the ESP32's RTC.
-  configTime(0, 0, ntpServer); // Set the GMT and daylight offsets to zero. We need UTC, not local time.
+  configTime(0, 3600, ntpServer); // Set the GMT offset to 0, and the daylight offset to 0 or 3600.
 
   struct tm timeinfo;
   if(getLocalTime(&timeinfo))
@@ -96,26 +96,26 @@ void loop()
   
   FastLED.show();
 
-  delay(25);
+  delay(20);
 }
 
 void timeToLEDs(uint8_t hour, uint8_t min, uint8_t sec)
 {
-  for (int i = 0; i < 60; i++) // Turn all LEDs off
-    leds[i] = CRGB::Black;
+  //Set the hue to the fraction of day.
+  uint8_t hue = (uint8_t)(((((float)(((uint32_t)(hour * 60 * 60)) + ((uint32_t)(min * 60)) + ((uint32_t)(sec)))) / 86400.0)) * 256.0);
 
-  //Set hue to fraction of day.
-  uint8_t greenHue = (uint8_t)((sin(((float)(((uint32_t)(hour * 60 * 60)) + ((uint32_t)(min * 60)) + ((uint32_t)(sec)))) * 1.5708 / 86400.0)) * 256.0);
-  uint8_t redHue = greenHue - 85;
-  uint8_t blueHue = greenHue + 85;
-  uint32_t hue = (((uint32_t)greenHue) << 16) | (((uint32_t)redHue) << 8) | (((uint32_t)blueHue) << 0);
-  Serial.printf("Red %d Green %d Blue %d\r\n",redHue,greenHue,blueHue);
+  //Apply the rainbow to the LEDs
+  fill_rainbow( leds, NUM_LEDS, hue, 4); // 256 / 60 = 4 (approx.)
 
-  //Set the correct LEDs to hue
-  leds[0 + (sec % 10)] = hue;
-  leds[10 + (sec / 10)] = hue;
-  leds[20 + (min % 10)] = hue;
-  leds[30 + (min / 10)] = hue;
-  leds[40 + (hour % 10)] = hue;
-  leds[50 + (hour / 10)] = hue;
+  // Change the other LEDs to Black
+  for (int i = 0; i < 60; i++)
+  {
+    if ((i != 00 + (sec % 10))
+    &&  (i != 10 + (sec / 10))
+    &&  (i != 20 + (min % 10))
+    &&  (i != 30 + (min / 10))
+    &&  (i != 40 + (hour % 10))
+    &&  (i != 50 + (hour / 10)))
+      leds[i] = CRGB::Black;
+  }
 }
