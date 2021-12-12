@@ -9,7 +9,7 @@ Features:
 * VEML7700 ambient light (lux) sensor - the lux can be used to adjust the LED brightness
 * USB-C interface - for 5V power and firmware updates
 
-![Dimensions](./img/Dimensions.jpg)
+![Dimensions](./img/Dimensions.png)
 
 Enjoy!
 
