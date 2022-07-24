@@ -120,6 +120,8 @@ void setClock()
 
   // set notification call-back function
   sntp_set_time_sync_notification_cb( timeavailable );
+
+  sntp_set_sync_interval(15000); // Set the NTP sync interval to 15s (the minimum)
   
   /**
    * A more convenient approach to handle TimeZones with daylightOffset 
@@ -138,7 +140,6 @@ void setClock()
    */
   sntp_servermode_dhcp(1);    // (optional)
 
-
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
   // Connect to WiFi.
 
@@ -148,7 +149,7 @@ void setClock()
 
   unsigned long startTime = millis();
   
-  while ((WiFi.status() != WL_CONNECTED) && (millis() < (startTime + 15000))) // Timeout after 15 seconds
+  while ((WiFi.status() != WL_CONNECTED) && (millis() < (startTime + 20000))) // Timeout after 20 seconds
   {
     delay(500);
     Serial.print(F("."));
@@ -165,18 +166,7 @@ void setClock()
 
   Serial.println(F("WiFi connected"));
 
-  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-  // Set the RTC using network time. (Code taken from the SimpleTime example.)
-
-  struct tm timeinfo;
-  if(getLocalTime(&timeinfo))
-  {
-    Serial.println(&timeinfo, "Network time is: %A, %B %d %Y %H:%M:%S");
-  }
-  else
-  {
-    Serial.println("Failed to obtain time!");
-  }
+  printLocalTime();
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
   // Disconnect the WiFi as it's no longer needed
@@ -190,7 +180,24 @@ void setClock()
 // (Does not get called if time is not adjusted...)
 void timeavailable(struct timeval *t)
 {
-  Serial.println("Got time adjustment from NTP");
+  Serial.print("NTP Callback: ");
+  printLocalTime();
+}
+
+void printLocalTime()
+{
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  // Set and print the RTC network time. (Code taken from the SimpleTime example.)
+
+  struct tm timeinfo;
+  if(getLocalTime(&timeinfo, 20000)) // Wait for up to 20s for time to be set (i.e. > the 15 second NTP sync interval)
+  {
+    Serial.println(&timeinfo, "Network time is: %A, %B %d %Y %H:%M:%S");
+  }
+  else
+  {
+    Serial.println("No time available (yet)");
+  }
 }
 
 void timeToLEDs(uint8_t hour, uint8_t min, uint8_t sec)
